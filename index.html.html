@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Form Filler — Maruhan Japan Bank Lao</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;700&family=Saysettha+OT&display=swap" rel="stylesheet">
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;700&display=swap');
+
+  @font-face {
+    font-family: 'Phetsarath OT';
+    src: url('https://cdn.jsdelivr.net/gh/nicowillis/lao-fonts@master/PhetsarathOT.ttf') format('truetype');
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1a1a2e;
+    --bg2: #16213e;
+    --bg3: #0f3460;
+    --surface: #1e2a4a;
+    --surface2: #253455;
+    --accent: #e94560;
+    --accent2: #0f9b8e;
+    --gold: #f5c518;
+    --text: #e8eaf0;
+    --text2: #a8b2cc;
+    --border: rgba(255,255,255,0.1);
+    --radius: 8px;
+    --toolbar-h: 60px;
+  }
+
+  body {
+    font-family: 'Noto Sans Lao', 'Times New Roman', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+
+  header h1 {
+    font-family: 'Times New Roman', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  header .sep { flex: 1; }
+
+  .btn-header {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-header:hover { background: var(--surface2); border-color: var(--accent2); }
+  .btn-header.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-header.primary:hover { background: #c73650; }
+  .btn-header.success { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+  .btn-header.success:hover { opacity: 0.85; }
+
+  /* ─── TOOLBAR ─── */
+  .toolbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    min-height: var(--toolbar-h);
+  }
+
+  .toolbar-group {
+    display: flex; align-items: center; gap: 4px;
+    padding: 0 8px;
+    border-right: 1px solid var(--border);
+  }
+  .toolbar-group:last-child { border-right: none; }
+
+  .tool-label {
+    font-size: 10px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-right: 2px;
+  }
+
+  .tbtn {
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.12s;
+    position: relative;
+  }
+  .tbtn:hover { background: var(--surface); color: var(--text); border-color: var(--border); }
+  .tbtn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tbtn svg { width: 16px; height: 16px; fill: currentColor; }
+
+  /* Special mark buttons */
+  .mark-btn {
+    width: auto; padding: 0 10px;
+    font-size: 16px; font-weight: 700;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+  }
+  .mark-btn.tick { color: #4caf50; border-color: #4caf50; }
+  .mark-btn.cross { color: var(--accent); border-color: var(--accent); }
+
+  /* Font selector */
+  select.font-sel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    max-width: 150px;
+  }
+  select.font-sel:hover { border-color: var(--accent2); }
+
+  /* Font size */
+  input.fsize {
+    width: 52px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 5px 6px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  /* Color picker */
+  input[type="color"] {
+    width: 34px; height: 34px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  /* Page nav */
+  .page-nav { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text2); }
+  .page-nav button {
+    width: 28px; height: 28px;
+    border-radius: 5px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text);
+    cursor: pointer; font-size: 14px;
+  }
+  .page-nav button:hover { background: var(--surface2); }
+  .page-nav span { min-width: 60px; text-align: center; }
+
+  /* ─── MAIN AREA ─── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ─── CANVAS AREA ─── */
+  .canvas-wrap {
+    flex: 1;
+    overflow: auto;
+    background: var(--bg);
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  #pdf-container {
+    position: relative;
+    display: inline-block;
+    cursor: crosshair;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  }
+
+  #pdf-canvas {
+    display: block;
+    background: #fff;
+  }
+
+  /* ─── TEXT BOXES ─── */
+  .annotation {
+    position: absolute;
+    min-width: 40px;
+    min-height: 24px;
+    border: 1.5px dashed rgba(14,200,178,0.5);
+    cursor: move;
+    user-select: none;
+    z-index: 10;
+  }
+  .annotation:hover { border-color: var(--accent2); }
+  .annotation.selected { border-color: var(--gold); border-style: solid; }
+
+  .annotation-content {
+    outline: none;
+    min-width: 40px;
+    min-height: 20px;
+    white-space: pre;
+    cursor: text;
+    line-height: 1.3;
+  }
+
+  .annotation-delete {
+    position: absolute;
+    top: -10px; right: -10px;
+    width: 18px; height: 18px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    z-index: 20;
+    line-height: 1;
+  }
+  .annotation.selected .annotation-delete { display: flex; }
+
+  .mark-annotation {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    z-index: 10;
+    font-size: 20px;
+    line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    border: 1.5px dashed rgba(255,255,255,0.2);
+    border-radius: 4px;
+  }
+  .mark-annotation.selected { border-color: var(--gold); }
+  .mark-annotation .annotation-delete { display: none; }
+  .mark-annotation.selected .annotation-delete { display: flex; }
+
+  /* ─── SIDEBAR (Properties) ─── */
+  .sidebar {
+    width: 220px;
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    padding: 16px;
+    overflow-y: auto;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .sidebar h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  .prop-row {
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .prop-row label {
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .prop-row select,
+  .prop-row input[type="number"],
+  .prop-row input[type="color"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  .prop-row input[type="color"] { height: 36px; padding: 2px 4px; }
+
+  .fmt-btns { display: flex; gap: 4px; }
+  .fmt-btn {
+    flex: 1; padding: 6px 0;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .fmt-btn:hover { background: var(--surface2); color: var(--text); }
+  .fmt-btn.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+
+  .hint {
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  /* ─── DROP ZONE ─── */
+  #drop-zone {
+    position: fixed;
+    inset: 0;
+    background: rgba(14,200,178,0.08);
+    border: 3px dashed var(--accent2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    font-size: 24px;
+    color: var(--accent2);
+    display: none;
+  }
+
+  /* ─── WELCOME ─── */
+  #welcome {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    color: var(--text2);
+    text-align: center;
+    padding: 40px;
+  }
+
+  #welcome h2 {
+    font-family: 'Times New Roman', serif;
+    font-size: 28px;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  #welcome p { font-size: 14px; line-height: 1.7; max-width: 400px; }
+
+  .upload-area {
+    border: 2px dashed var(--accent2);
+    border-radius: 16px;
+    padding: 40px 60px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(15,155,142,0.05);
+  }
+  .upload-area:hover { background: rgba(15,155,142,0.12); }
+  .upload-area svg { width: 48px; height: 48px; fill: var(--accent2); margin-bottom: 12px; }
+  .upload-area p { font-size: 15px; color: var(--accent2); margin-top: 8px; }
+
+  /* ─── EXPORT MODAL ─── */
+  #export-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  #export-modal.open { display: flex; }
+  .modal-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    width: 380px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .modal-box h2 { font-family: 'Times New Roman', serif; color: var(--gold); font-size: 20px; }
+  .modal-opt {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .modal-opt:hover { border-color: var(--accent2); background: rgba(15,155,142,0.08); }
+  .modal-opt svg { width: 28px; height: 28px; fill: var(--accent2); flex-shrink: 0; }
+  .modal-opt h3 { font-size: 14px; margin-bottom: 3px; }
+  .modal-opt p { font-size: 12px; color: var(--text2); }
+  .modal-close {
+    align-self: flex-end;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: 6px;
+    padding: 7px 16px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .modal-close:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Status bar */
+  #status {
+    position: fixed;
+    bottom: 16px; right: 16px;
+    background: var(--accent2);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 500;
+    pointer-events: none;
+  }
+  #status.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <h1>📋 PDF Form Filler — ທະນາຄານ ມາຣຮູ ານ ເຈແປນລາວ</h1>
+  <div class="sep"></div>
+  <button class="btn-header" onclick="document.getElementById('file-input').click()">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+    Open PDF
+  </button>
+  <button class="btn-header" onclick="clearAll()">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    Clear All
+  </button>
+  <button class="btn-header success" onclick="openExportModal()">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+    Export PDF
+  </button>
+</header>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+
+  <!-- Font Family -->
+  <div class="toolbar-group">
+    <span class="tool-label">Font</span>
+    <select class="font-sel" id="tb-font" onchange="applyFont()">
+      <optgroup label="Lao Fonts">
+        <option value="'Phetsarath OT', serif">Phetsarath OT</option>
+        <option value="'Noto Sans Lao', sans-serif">Noto Sans Lao</option>
+        <option value="'Saysettha OT', serif">Saysettha OT</option>
+      </optgroup>
+      <optgroup label="English Fonts">
+        <option value="'Times New Roman', serif" selected>Times New Roman</option>
+      </optgroup>
+    </select>
+  </div>
+
+  <!-- Font Size -->
+  <div class="toolbar-group">
+    <span class="tool-label">Size</span>
+    <input class="fsize" type="number" id="tb-size" value="14" min="6" max="72" onchange="applySize()">
+  </div>
+
+  <!-- Formatting -->
+  <div class="toolbar-group">
+    <span class="tool-label">Style</span>
+    <button class="tbtn" id="tb-bold" title="Bold" onclick="toggleFormat('bold')"><b>B</b></button>
+    <button class="tbtn" id="tb-strike" title="Strikethrough" onclick="toggleFormat('strike')"><s>S</s></button>
+  </div>
+
+  <!-- Color -->
+  <div class="toolbar-group">
+    <span class="tool-label">Color</span>
+    <input type="color" id="tb-color" value="#000000" onchange="applyColor()" title="Text Color">
+  </div>
+
+  <!-- Marks -->
+  <div class="toolbar-group">
+    <span class="tool-label">Marks</span>
+    <button class="tbtn mark-btn tick" title="Add tick mark — drag to position" onclick="addMark('✓')">✓</button>
+    <button class="tbtn mark-btn cross" title="Add X mark — drag to position" onclick="addMark('✗')">✗</button>
+    <button class="tbtn mark-btn" title="Add circle mark" onclick="addMark('○')" style="color:#f5c518;border-color:#f5c518">○</button>
+  </div>
+
+  <!-- Mark Size -->
+  <div class="toolbar-group">
+    <span class="tool-label">Mark Size</span>
+    <input class="fsize" type="number" id="tb-mark-size" value="20" min="10" max="60" title="Mark font size">
+  </div>
+
+  <!-- Page Nav -->
+  <div class="toolbar-group">
+    <div class="page-nav">
+      <button onclick="changePage(-1)">‹</button>
+      <span id="page-info">— / —</span>
+      <button onclick="changePage(1)">›</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- CANVAS WRAP -->
+  <div class="canvas-wrap" id="canvas-wrap">
+
+    <!-- WELCOME SCREEN -->
+    <div id="welcome">
+      <div>
+        <h2>ແບບຟອມ PDF Filler</h2>
+        <p style="color:var(--text2); font-size:13px;">Load your PDF, then click anywhere on it to add text. Drag ✓ and ✗ marks onto checkboxes. Export when done.</p>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('file-input').click()">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm4 18H6V4h7v5h5v11zm-5-7l-3 3-1.41-1.41L11 16l-1.59-1.59L8 16l-3-3 1.41-1.42L8 13l1.59-1.59L11 10 13 12l1.41-1.41 1.59 1.41-1 1z"/></svg>
+        <p>Click to open PDF<br><span style="font-size:12px;opacity:0.6">or drag & drop here</span></p>
+      </div>
+    </div>
+
+    <!-- PDF CONTAINER -->
+    <div id="pdf-container" style="display:none;">
+      <canvas id="pdf-canvas"></canvas>
+      <!-- annotations injected here -->
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div>
+      <h3>Selected Element</h3>
+      <div id="no-selection" class="hint" style="margin-top:6px">
+        Click on an annotation to select and edit its properties here.
+      </div>
+      <div id="sel-props" style="display:none; display:flex; flex-direction:column; gap:12px;">
+
+        <div class="prop-row">
+          <label>Font Family</label>
+          <select id="sp-font" onchange="applyPropFont()">
+            <option value="'Phetsarath OT', serif">Phetsarath OT</option>
+            <option value="'Noto Sans Lao', sans-serif">Noto Sans Lao</option>
+            <option value="'Saysettha OT', serif">Saysettha OT</option>
+            <option value="'Times New Roman', serif">Times New Roman</option>
+          </select>
+        </div>
+
+        <div class="prop-row">
+          <label>Font Size (px)</label>
+          <input type="number" id="sp-size" min="6" max="72" value="14" onchange="applyPropSize()">
+        </div>
+
+        <div class="prop-row">
+          <label>Text Color</label>
+          <input type="color" id="sp-color" value="#000000" onchange="applyPropColor()">
+        </div>
+
+        <div class="prop-row">
+          <label>Style</label>
+          <div class="fmt-btns">
+            <button class="fmt-btn" id="sp-bold" onclick="togglePropBold()"><b>Bold</b></button>
+            <button class="fmt-btn" id="sp-strike" onclick="togglePropStrike()"><s>Strike</s></button>
+          </div>
+        </div>
+
+        <div class="prop-row">
+          <label>Mark Size (px)</label>
+          <input type="number" id="sp-mark-size" min="10" max="60" value="20" onchange="applyPropMarkSize()">
+        </div>
+
+      </div>
+    </div>
+
+    <div>
+      <h3>How to Use</h3>
+      <div class="hint">
+        <b>Add text:</b> Click anywhere on PDF<br><br>
+        <b>Edit:</b> Double-click a text box<br><br>
+        <b>Move:</b> Drag any annotation<br><br>
+        <b>Marks ✓ ✗:</b> Click toolbar button, then drag to position<br><br>
+        <b>Delete:</b> Select → click red ×<br><br>
+        <b>Export:</b> Green button → choose overlay or text-only PDF
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- EXPORT MODAL -->
+<div id="export-modal">
+  <div class="modal-box">
+    <h2>Export PDF</h2>
+
+    <div class="modal-opt" onclick="exportOverlay()">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm4 18H6V4h7v5h5v11zM9 13h6v2H9zm0-4h6v2H9z"/></svg>
+      <div>
+        <h3>Text over original PDF</h3>
+        <p>Renders your annotations on top of the original form pages</p>
+      </div>
+    </div>
+
+    <div class="modal-opt" onclick="exportTextOnly()">
+      <svg viewBox="0 0 24 24"><path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z"/></svg>
+      <div>
+        <h3>Annotations only (text PDF)</h3>
+        <p>Creates a clean PDF with just your entered text — no background image</p>
+      </div>
+    </div>
+
+    <button class="modal-close" onclick="closeExportModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- DROP ZONE -->
+<div id="drop-zone">
+  <div>
+    <svg viewBox="0 0 24 24" width="64" height="64" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+    <p>Drop PDF here</p>
+  </div>
+</div>
+
+<!-- File input -->
+<input type="file" id="file-input" accept=".pdf" style="display:none" onchange="loadPDF(this.files[0])">
+
+<!-- Status -->
+<div id="status"></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let pdfDoc = null;
+let currentPage = 1;
+let totalPages = 0;
+let scale = 1.5;
+let annotations = []; // {id, type:'text'|'mark', el, page, x, y, props}
+let selectedId = null;
+let isDragging = false;
+let dragOffX = 0, dragOffY = 0;
+let annotIdCounter = 0;
+let pdfBytes = null; // original PDF ArrayBuffer
+
+const canvas = document.getElementById('pdf-canvas');
+const ctx = canvas.getContext('2d');
+const container = document.getElementById('pdf-container');
+const welcome = document.getElementById('welcome');
+
+// ─── DRAG & DROP PDF ────────────────────────────────────────
+document.addEventListener('dragover', e => { e.preventDefault(); document.getElementById('drop-zone').style.display = 'flex'; });
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) document.getElementById('drop-zone').style.display = 'none'; });
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  document.getElementById('drop-zone').style.display = 'none';
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') loadPDF(f);
+});
+
+// ─── LOAD PDF ────────────────────────────────────────────────
+function loadPDF(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    pdfBytes = e.target.result.slice(0); // keep copy
+    pdfjsLib.getDocument({ data: e.target.result }).promise.then(doc => {
+      pdfDoc = doc;
+      totalPages = doc.numPages;
+      currentPage = 1;
+      annotations = [];
+      welcome.style.display = 'none';
+      container.style.display = 'inline-block';
+      renderPage(currentPage);
+      showStatus('PDF loaded — ' + totalPages + ' page(s)');
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ─── RENDER PAGE ─────────────────────────────────────────────
+function renderPage(num) {
+  document.getElementById('page-info').textContent = num + ' / ' + totalPages;
+  // Hide annotations for other pages
+  annotations.forEach(a => {
+    a.el.style.display = a.page === num ? '' : 'none';
+  });
+
+  pdfDoc.getPage(num).then(page => {
+    const viewport = page.getViewport({ scale });
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    page.render({ canvasContext: ctx, viewport }).promise.then(() => {
+      // nothing extra needed
+    });
+  });
+}
+
+// ─── CLICK ON PDF — ADD TEXT BOX ──────────────────────────────
+container.addEventListener('click', function(e) {
+  if (e.target !== canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left - container.getBoundingClientRect().left + canvas.getBoundingClientRect().left - rect.left;
+  const cx = e.clientX - container.getBoundingClientRect().left;
+  const cy = e.clientY - container.getBoundingClientRect().top;
+  createTextAnnotation(cx, cy, currentPage);
+});
+
+// ─── CREATE TEXT ANNOTATION ───────────────────────────────────
+function createTextAnnotation(x, y, page) {
+  const id = ++annotIdCounter;
+  const font = document.getElementById('tb-font').value;
+  const size = parseInt(document.getElementById('tb-size').value) || 14;
+  const color = document.getElementById('tb-color').value;
+
+  const div = document.createElement('div');
+  div.className = 'annotation';
+  div.dataset.id = id;
+  div.style.left = x + 'px';
+  div.style.top = y + 'px';
+
+  const content = document.createElement('div');
+  content.className = 'annotation-content';
+  content.contentEditable = 'true';
+  content.spellcheck = false;
+  content.style.fontFamily = font;
+  content.style.fontSize = size + 'px';
+  content.style.color = color;
+  content.style.fontWeight = document.getElementById('tb-bold').classList.contains('active') ? 'bold' : 'normal';
+  content.style.textDecoration = document.getElementById('tb-strike').classList.contains('active') ? 'line-through' : 'none';
+  content.textContent = '';
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'annotation-delete';
+  delBtn.textContent = '×';
+  delBtn.onclick = (ev) => { ev.stopPropagation(); removeAnnotation(id); };
+
+  div.appendChild(content);
+  div.appendChild(delBtn);
+  container.appendChild(div);
+
+  const ann = { id, type: 'text', el: div, content, page, x, y,
+    props: { font, size, color, bold: false, strike: false } };
+  annotations.push(ann);
+
+  setupDrag(div, id);
+  div.addEventListener('mousedown', ev => { if (ev.target === delBtn) return; selectAnnotation(id); });
+
+  selectAnnotation(id);
+  content.focus();
+  // put cursor at end
+  const range = document.createRange();
+  range.selectNodeContents(content);
+  range.collapse(false);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+// ─── ADD MARK ────────────────────────────────────────────────
+function addMark(char) {
+  // Place in top-left area of current canvas view, user drags it
+  const canvasWrap = document.getElementById('canvas-wrap');
+  const containerRect = container.getBoundingClientRect();
+  const wrapRect = canvasWrap.getBoundingClientRect();
+  // place at visible top-left of current scroll
+  const x = canvasWrap.scrollLeft + 40;
+  const y = canvasWrap.scrollTop + 40;
+
+  const id = ++annotIdCounter;
+  const size = parseInt(document.getElementById('tb-mark-size').value) || 20;
+
+  const div = document.createElement('div');
+  div.className = 'mark-annotation';
+  div.dataset.id = id;
+  div.dataset.mark = char;
+  div.style.left = x + 'px';
+  div.style.top = y + 'px';
+  div.style.fontSize = size + 'px';
+  div.style.color = char === '✓' ? '#4caf50' : (char === '✗' ? '#e94560' : '#f5c518');
+  div.textContent = char;
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'annotation-delete';
+  delBtn.textContent = '×';
+  delBtn.onclick = (ev) => { ev.stopPropagation(); removeAnnotation(id); };
+  div.appendChild(delBtn);
+
+  container.appendChild(div);
+
+  const ann = { id, type: 'mark', el: div, page: currentPage, x, y,
+    props: { char, size } };
+  annotations.push(ann);
+
+  setupDrag(div, id);
+  div.addEventListener('mousedown', ev => { if (ev.target === delBtn) return; selectAnnotation(id); });
+  selectAnnotation(id);
+  showStatus('Drag the ' + char + ' mark to position it on the form');
+}
+
+// ─── DRAG ─────────────────────────────────────────────────────
+function setupDrag(el, id) {
+  let startX, startY, origX, origY, dragging = false;
+
+  el.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('annotation-content') ||
+        e.target.classList.contains('annotation-delete')) return;
+    e.preventDefault();
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    origX = parseInt(el.style.left); origY = parseInt(el.style.top);
+    el.style.cursor = 'grabbing';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    const nx = origX + dx;
+    const ny = origY + dy;
+    el.style.left = nx + 'px';
+    el.style.top = ny + 'px';
+    const ann = annotations.find(a => a.id === id);
+    if (ann) { ann.x = nx; ann.y = ny; }
+  });
+
+  document.addEventListener('mouseup', e => {
+    if (dragging) { dragging = false; el.style.cursor = 'move'; }
+  });
+}
+
+// ─── SELECT ANNOTATION ───────────────────────────────────────
+function selectAnnotation(id) {
+  // Deselect all
+  annotations.forEach(a => a.el.classList.remove('selected'));
+  selectedId = id;
+  if (!id) {
+    document.getElementById('no-selection').style.display = '';
+    document.getElementById('sel-props').style.display = 'none';
+    return;
+  }
+  const ann = annotations.find(a => a.id === id);
+  if (!ann) return;
+  ann.el.classList.add('selected');
+  document.getElementById('no-selection').style.display = 'none';
+  document.getElementById('sel-props').style.display = 'flex';
+
+  if (ann.type === 'text') {
+    document.getElementById('sp-font').value = ann.props.font;
+    document.getElementById('sp-size').value = ann.props.size;
+    document.getElementById('sp-color').value = ann.props.color;
+    document.getElementById('sp-bold').classList.toggle('active', ann.props.bold);
+    document.getElementById('sp-strike').classList.toggle('active', ann.props.strike);
+    document.getElementById('sp-mark-size').style.display = 'none';
+    document.getElementById('sp-mark-size').previousElementSibling.style.display = 'none';
+  } else {
+    document.getElementById('sp-font').value = '';
+    document.getElementById('sp-mark-size').value = ann.props.size;
+    document.getElementById('sp-mark-size').style.display = '';
+    document.getElementById('sp-mark-size').previousElementSibling.style.display = '';
+  }
+}
+
+// Click background = deselect
+container.addEventListener('mousedown', e => {
+  if (e.target === canvas || e.target === container) {
+    annotations.forEach(a => a.el.classList.remove('selected'));
+    selectedId = null;
+    document.getElementById('no-selection').style.display = '';
+    document.getElementById('sel-props').style.display = 'none';
+  }
+});
+
+// ─── REMOVE ──────────────────────────────────────────────────
+function removeAnnotation(id) {
+  const idx = annotations.findIndex(a => a.id === id);
+  if (idx === -1) return;
+  annotations[idx].el.remove();
+  annotations.splice(idx, 1);
+  selectedId = null;
+  document.getElementById('no-selection').style.display = '';
+  document.getElementById('sel-props').style.display = 'none';
+}
+
+function clearAll() {
+  if (!annotations.length) return;
+  if (!confirm('Clear all annotations on this page?')) return;
+  const toRemove = annotations.filter(a => a.page === currentPage);
+  toRemove.forEach(a => { a.el.remove(); });
+  annotations = annotations.filter(a => a.page !== currentPage);
+}
+
+// ─── TOOLBAR ACTIONS ─────────────────────────────────────────
+function toggleFormat(type) {
+  const btn = document.getElementById('tb-' + type);
+  btn.classList.toggle('active');
+  // apply to selected
+  applyPropFromToolbar(type);
+}
+
+function applyPropFromToolbar(type) {
+  if (!selectedId) return;
+  const ann = annotations.find(a => a.id === selectedId);
+  if (!ann || ann.type !== 'text') return;
+  if (type === 'bold') {
+    ann.props.bold = document.getElementById('tb-bold').classList.contains('active');
+    ann.content.style.fontWeight = ann.props.bold ? 'bold' : 'normal';
+    document.getElementById('sp-bold').classList.toggle('active', ann.props.bold);
+  }
+  if (type === 'strike') {
+    ann.props.strike = document.getElementById('tb-strike').classList.contains('active');
+    ann.content.style.textDecoration = ann.props.strike ? 'line-through' : 'none';
+    document.getElementById('sp-strike').classList.toggle('active', ann.props.strike);
+  }
+}
+
+function applyFont() {
+  if (!selectedId) return;
+  const ann = annotations.find(a => a.id === selectedId);
+  if (!ann || ann.type !== 'text') return;
+  ann.props.font = document.getElementById('tb-font').value;
+  ann.content.style.fontFamily = ann.props.font;
+}
+
+function applySize() {
+  if (!selectedId) return;
+  const ann = annotations.find(a => a.id === selectedId);
+  if (!ann || ann.type !== 'text') return;
+  ann.props.size = parseInt(document.getElementById('tb-size').value);
+  ann.content.style.fontSize = ann.props.size + 'px';
+}
+
+function applyColor() {
+  if (!selectedId) return;
+  const ann = annotations.find(a => a.id === selectedId);
+  if (!ann || ann.type !== 'text') return;
+  ann.props.color = document.getElementById('tb-color').value;
+  ann.content.style.color = ann.props.color;
+}
+
+// ─── SIDEBAR PROPERTY CHANGES ─────────────────────────────────
+function applyPropFont() {
+  if (!selectedId) return;
+  const ann = annotations.find(a => a.id === selectedId);
+  if (!ann || ann.type !== 'text') return;
+  ann.props.font = document.getElementById('sp-font').value;
+  ann.content.style.fontFamily = ann.props.font;
+  document.getElementById('tb-font').value = ann.props.font;
+}
+
+function applyPropSize() {
+  if (!selectedId) return;
+  const ann = annotations.find(a => a.id === selectedId);
+  if (!ann || ann.type !== 'text') return;
+  ann.props.size = parseInt(document.getElementById('sp-size').value);
+  ann.content.style.fontSize = ann.props.size + 'px';
+}
+
+function applyPropColor() {
+  if (!selectedId) return;
+  const ann = annotations.find(a => a.id === selectedId);
+  if (!ann || ann.type !== 'text') return;
+  ann.props.color = document.getElementById('sp-color').value;
+  ann.content.style.color = ann.props.color;
+}
+
+function togglePropBold() {
+  if (!selectedId) return;
+  const ann = annotations.find(a => a.id === selectedId);
+  if (!ann || ann.type !== 'text') return;
+  ann.props.bold = !ann.props.bold;
+  ann.content.style.fontWeight = ann.props.bold ? 'bold' : 'normal';
+  document.getElementById('sp-bold').classList.toggle('active', ann.props.bold);
+  document.getElementById('tb-bold').classList.toggle('active', ann.props.bold);
+}
+
+function togglePropStrike() {
+  if (!selectedId) return;
+  const ann = annotations.find(a => a.id === selectedId);
+  if (!ann || ann.type !== 'text') return;
+  ann.props.strike = !ann.props.strike;
+  ann.content.style.textDecoration = ann.props.strike ? 'line-through' : 'none';
+  document.getElementById('sp-strike').classList.toggle('active', ann.props.strike);
+  document.getElementById('tb-strike').classList.toggle('active', ann.props.strike);
+}
+
+function applyPropMarkSize() {
+  if (!selectedId) return;
+  const ann = annotations.find(a => a.id === selectedId);
+  if (!ann || ann.type !== 'mark') return;
+  ann.props.size = parseInt(document.getElementById('sp-mark-size').value);
+  ann.el.style.fontSize = ann.props.size + 'px';
+}
+
+// ─── PAGE NAV ─────────────────────────────────────────────────
+function changePage(delta) {
+  if (!pdfDoc) return;
+  const next = currentPage + delta;
+  if (next < 1 || next > totalPages) return;
+  currentPage = next;
+  renderPage(currentPage);
+}
+
+// ─── EXPORT MODAL ─────────────────────────────────────────────
+function openExportModal() {
+  if (!pdfDoc) { showStatus('Please load a PDF first'); return; }
+  document.getElementById('export-modal').classList.add('open');
+}
+function closeExportModal() { document.getElementById('export-modal').classList.remove('open'); }
+
+// ─── EXPORT: OVERLAY (screenshot each page) ───────────────────
+async function exportOverlay() {
+  closeExportModal();
+  showStatus('Generating overlay PDF… please wait');
+
+  const { jsPDF } = window.jspdf;
+  const savedPage = currentPage;
+
+  // Temporarily hide delete buttons & selection borders
+  annotations.forEach(a => {
+    a.el.querySelector('.annotation-delete').style.display = 'none';
+    a.el.classList.remove('selected');
+  });
+  selectedId = null;
+
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt' });
+  let firstPage = true;
+
+  for (let p = 1; p <= totalPages; p++) {
+    // Show only this page's annotations
+    annotations.forEach(a => { a.el.style.display = a.page === p ? '' : 'none'; });
+    currentPage = p;
+    await renderPageAsync(p);
+    await sleep(400);
+
+    const imgData = await html2canvas(container, {
+      scale: 1.5,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff'
+    });
+
+    const imgW = imgData.width;
+    const imgH = imgData.height;
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const ratio = pdfW / imgW;
+    const pdfH = imgH * ratio;
+
+    if (!firstPage) pdf.addPage([pdfW, pdfH]);
+    else pdf.internal.pageSize.height = pdfH;
+    firstPage = false;
+
+    pdf.addImage(imgData.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pdfW, pdfH);
+  }
+
+  pdf.save('maruhan-form-filled.pdf');
+
+  // Restore
+  currentPage = savedPage;
+  renderPage(savedPage);
+  showStatus('PDF exported successfully!');
+}
+
+// ─── EXPORT: TEXT ONLY ────────────────────────────────────────
+function exportTextOnly() {
+  closeExportModal();
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+
+  // Group by page
+  for (let p = 1; p <= totalPages; p++) {
+    const pageAnns = annotations.filter(a => a.page === p);
+    if (p > 1) pdf.addPage();
+
+    pageAnns.forEach(ann => {
+      const pdfX = (ann.x / (canvas.width)) * pdf.internal.pageSize.getWidth();
+      const pdfY = (ann.y / (canvas.height)) * pdf.internal.pageSize.getHeight();
+
+      if (ann.type === 'text') {
+        pdf.setFont('times', ann.props.bold ? 'bold' : 'normal');
+        pdf.setFontSize(ann.props.size * 0.75);
+        const hex = ann.props.color.replace('#','');
+        const r = parseInt(hex.substr(0,2),16);
+        const g = parseInt(hex.substr(2,2),16);
+        const b = parseInt(hex.substr(4,2),16);
+        pdf.setTextColor(r,g,b);
+        const text = ann.content.textContent || '';
+        pdf.text(text, pdfX, pdfY + ann.props.size * 0.75);
+        if (ann.props.strike) {
+          const tw = pdf.getTextWidth(text);
+          pdf.setDrawColor(r,g,b);
+          pdf.line(pdfX, pdfY + ann.props.size*0.35, pdfX+tw, pdfY + ann.props.size*0.35);
+        }
+      } else {
+        pdf.setFontSize(ann.props.size * 0.75);
+        const c = ann.props.char;
+        pdf.setTextColor(c==='✓'?0:220, c==='✓'?150:c==='✗'?50:200, c==='✓'?0:c==='✗'?50:0);
+        pdf.text(c, pdfX, pdfY + ann.props.size*0.75);
+      }
+    });
+  }
+
+  pdf.save('maruhan-form-annotations.pdf');
+  showStatus('Text-only PDF exported!');
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────
+function renderPageAsync(num) {
+  return pdfDoc.getPage(num).then(page => {
+    const viewport = page.getViewport({ scale });
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    return page.render({ canvasContext: ctx, viewport }).promise;
+  });
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showStatus(msg) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+
+</body>
+</html>
